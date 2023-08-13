@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Number String Form</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  .chart-container {
+    width: 80%;
+    margin: auto;
+    border: 1px solid #ccc;
+    padding: 20px;
+  }
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    height: 300px;
+    border-top: 1px solid #ccc;
+  }
+  .bar {
+    background-color: #3498db;
+    width: 20px; /* Adjust as needed */
+    margin: 0 10px;
+    transition: height 0.3s;
+  }
+  .bar-label {
+    font-size: 14px;
+    text-align: center;
+    margin-top: 5px;
+  }
+</style>
+</head>
+<body>
+<h1>Enter a String of Numbers</h1>
+<form id="numberForm">
+  <label for="numberString">Number String:</label>
+  <input type="text" id="numberString" name="numberString" required>
+  <button type="submit">Submit</button>
+</form>
+<p id="result"></p>
+
+
+
+<div class="chart-container">
+    <div class="bar-chart" id="barChart">
+      <!-- Bars will be added here using JavaScript -->
+    </div>
+</div>
+<script>
+document.getElementById("numberForm").addEventListener("submit", async function(event) {
+  event.preventDefault();
+  
+  const numberString = document.getElementById("numberString").value;
+  
+  // Split the input string into an array of numbers
+  const numbersArray = numberString.split(",").map(str => parseInt(str.trim()));
+  
+  // Perform some action with the numbers, e.g., calculate the sum
+  const sum = numbersArray.reduce((acc, curr) => acc + curr, 0);
+  
+  // Display the result
+  const resultElement = document.getElementById("result");
+  resultElement.textContent = `Sum of the numbers: ${sum}`;
+  
+  // Send a POST request to http://localhost:8080/selection-sort
+  try {
+    const response = await fetch("http://localhost:8080/selection-sort", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ inputArray: numbersArray })
+    });
+
+    const responseData = await response.json();
+    console.log("Response from server:", responseData);
+  } catch (error) {
+    console.error("Error sending request:", error);
+  }
+
+});
+///////////
+const data = [10, 25, 8, 30, 15, 40, 20]; // Replace with your data array
+
+const chartContainer = document.getElementById('barChart');
+
+data.forEach((value, index) => {
+  const bar = document.createElement('div');
+  bar.classList.add('bar');
+  bar.style.height = `${value * 3}px`; // Adjust the scaling factor as needed
+  bar.innerHTML = `<div class="bar-label">${value}</div>`;
+  chartContainer.appendChild(bar);
+});
+
+</script>
+</body>
+</html>
