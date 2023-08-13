@@ -90,11 +90,11 @@ const data = [10, 25, 8, 30, 15, 40, 20]; // Replace with your data array
 const chartContainer = document.getElementById('barChart');
 
 data.forEach((value, index) => {
-  const bar = document.createElement('div');
-  bar.classList.add('bar');
-  bar.style.height = `${value * 3}px`; // Adjust the scaling factor as needed
-  bar.innerHTML = `<div class="bar-label">${value}</div>`;
-  chartContainer.appendChild(bar);
+const bar = document.createElement('div');
+bar.classList.add('bar');
+bar.style.height = `${value * 5}px`; // Adjust the scaling factor as needed
+bar.innerHTML = `<div class="bar-label">${value}</div>`;
+chartContainer.appendChild(bar);
 });
 
 </script>
