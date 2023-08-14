@@ -31,18 +31,37 @@
   }
   .bar {
     background-color: #3498db;
-    width: 20px;
-    margin: 0 10px;
+    margin: 0 0.5px;
     transition: height 0.3s;
+    flex: 0 0 auto;
   }
   .bar-label {
-    font-size: 14px;
+    font-size: 10px;
     text-align: center;
-    margin-top: 5px;
+  }
+  .checkbox-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 </style>
 </head>
 <body>
+  <h1>Select sorting algorithm</h1>
+  <div class="checkbox-list">
+    <label>
+      <input type="checkbox" name="option" value="Selection Sort" checked> Selection Sort
+    </label>
+    <label>
+      <input type="checkbox" name="option" value="Bubble Sort"> Bubble Sort
+    </label>
+    <label>
+      <input type="checkbox" name="option" value="Insertion Sort"> Insertion Sort
+    </label>
+    <label>
+      <input type="checkbox" name="option" value="Quick Sort"> Quick Sort
+    </label>
+  </div>
 <h1>Enter a String of Numbers</h1>
 <form id="numberForm">
   <label for="numberString">Number String:</label>
@@ -59,14 +78,45 @@
     </div>
 </div>
 <script>
+const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+let sortingAlgo = "Selection Sort";
+
+checkboxes.forEach(checkbox => {
+  checkbox.addEventListener('change', () => {
+    if (checkbox.checked) {
+      checkboxes.forEach(otherCheckbox => {
+        if (otherCheckbox !== checkbox) {
+          otherCheckbox.checked = false;
+        }
+      });
+      console.log(`Selected checkbox: ${checkbox.value}`);
+      sortingAlgo = checkbox.value;
+    }
+  });
+});
+
+let interruptSorting = false;
+let disableButton = false;
+document.getElementById("numberForm").addEventListener("submit", function(event) {
+  event.preventDefault();
+  interruptSorting = true;
+});
+
+
 document.getElementById("numberForm").addEventListener("submit", async function(event) {
   event.preventDefault();
-  
-  const numberString = document.getElementById("numberString").value;
-  
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  if (disableButton) {
+    console.log("Sorting is already in progress. Please wait.");
+    return;
+  }
+  disableButton = true;
+
+  numberString = document.getElementById("numberString").value;
   // Split the input string into an array of numbers
-  const numbersArray = numberString.split(",").map(str => parseInt(str.trim()));
-  
+  let numbersArray = null;
+  numbersArray = numberString.split(",").map(str => parseInt(str.trim()));
   // Perform some action with the numbers, e.g., calculate the sum
   const sum = numbersArray.reduce((acc, curr) => acc + curr, 0);
   
@@ -81,37 +131,86 @@ document.getElementById("numberForm").addEventListener("submit", async function(
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ inputArray: numbersArray })
+      body: JSON.stringify({ inputArray: numbersArray, sortingAlgo: sortingAlgo})
     });
 
     const responseData = await response.json();
     console.log("Response from server:", responseData);
-  } catch (error) {
-    console.error("Error sending request:", error);
-  }
+
+    // render array
+    let data = null;
+    data = numbersArray;
+
+    let swaps = responseData["swaps"];
+    console.log("swaps: " + swaps);
+    console.log(swaps);
+
+    renderArray(data);
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    interruptSorting = false;
+    disableButton = false;
+    for (let i = 0; i < swaps.length; i+=2) {
+      if (interruptSorting) {
+        console.log("Sorting process interrupted.");
+        break; // Exit the loop
+      }
+        let j = i + 1;
+        let x = swaps[i];
+        let y = swaps[j];
+        console.log(x + ", " + y);
+
+        let temp = data[x];
+        data[x] = data[y];
+        data[y] = temp;
+
+        renderArray(data);
+        await new Promise(resolve => setTimeout(resolve, 1));
+    }
+
+    function renderArray(data) {
+        const chartContainer = document.getElementById('barChart');
+        chartContainer.innerHTML = ``;
+
+        // Create grid lines
+        for (let i = 1; i <= 20; i++) {
+          const gridLine = document.createElement('div');
+          gridLine.classList.add('grid-line');
+          const position = `${i * 5}%`;
+          gridLine.style.top = position;
+          chartContainer.appendChild(gridLine);
+        }
+
+        data.forEach((value, index) => {
+          const bar = document.createElement('div');
+          bar.classList.add('bar');
+          bar.style.height = `${value * 3}px`;
+
+          const boxCount = data.length;
+
+          const containerWidth = chartContainer.clientWidth;
+          const marginTotal = 1 * (boxCount - 1);
+          const availableWidth = containerWidth - marginTotal;
+          const boxWidthPercentage = (availableWidth / boxCount / containerWidth) * 100;
+          bar.style.flexBasis = `${boxWidthPercentage}%`;
+
+          //bar.innerHTML = `<div class="bar-label">${value}</div>`;
+          chartContainer.appendChild(bar);
+        });
+    }
+
+    
+    } catch (error) {
+        console.error("Error sending request:", error);
+    }finally{
+      interruptSorting = false;
+      disableButton = false;
+    }
 
 });
 ///////////
-const data = [10, 25, 8, 30, 15, 40, 20, 10, 1, 5, 66, 11, 12, 4, 9]; // Replace with your data array
+// const data = [10, 25, 8, 30, 15, 40, 20, 10, 1, 5, 66, 11, 12, 4, 9];
 
-const chartContainer = document.getElementById('barChart');
-
-// Create grid lines
-for (let i = 1; i <= 20; i++) {
-  const gridLine = document.createElement('div');
-  gridLine.classList.add('grid-line');
-  const position = `${i * 5}%`;
-  gridLine.style.top = position;
-  chartContainer.appendChild(gridLine);
-}
-
-data.forEach((value, index) => {
-  const bar = document.createElement('div');
-  bar.classList.add('bar');
-  bar.style.height = `${value * 3}px`;
-  bar.innerHTML = `<div class="bar-label">${value}</div>`;
-  chartContainer.appendChild(bar);
-});
 
 </script>
 </body>
